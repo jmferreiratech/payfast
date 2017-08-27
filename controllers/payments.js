@@ -1,5 +1,12 @@
 import {PaymentDAO} from "../persistency/PaymentDAO";
 import {ConnectionFactory} from "../persistency/ConnectionFactory";
+import CardsService from "../services/CardsService";
+
+const PaymentTypes = {
+    CREATED: "CREATED",
+    CONFIRMED: "CONFIRMED",
+    CANCELED: "CANCELED",
+};
 
 export default app => {
     app.route("/payments").get((req, res) => res.send('ok'));
@@ -8,37 +15,45 @@ export default app => {
         validatePayment(req)
             .then(() => {
                 console.log("Processing payment...");
-                const payment = req.body;
-                payment.status = 'CREATED';
+                const {payment} = req.body;
+                payment.status = PaymentTypes.CREATED;
                 payment.date = new Date();
 
                 new PaymentDAO(ConnectionFactory.createConnection())
                     .save(payment)
                     .then(result => {
-                        console.log('Payment created: ' + result);
                         payment.id = result.insertId;
-                        res.location(`/payments/payment/${payment.id}`);
-
-                        const response = {
-                            payment,
-                            links: [
-                                {
-                                    href: `/payments/payment/${payment.id}`,
-                                    rel: "confirm",
-                                    method: "PUT",
-                                },
-                                {
-                                    href: `/payments/payment/${payment.id}`,
-                                    rel: "cancel",
-                                    method: "DELETE",
-                                },
-                            ],
-                        };
-
+                        return {payment};
+                    })
+                    .then(response => {
+                        if (response.payment.payment_method === "card") {
+                            const {card} = req.body;
+                            return new CardsService().authorize(card)
+                                .then(result => {
+                                    response.card = result;
+                                    return response;
+                                });
+                        }
+                        return response;
+                    })
+                    .then(response => {
+                        response.links =  [
+                            {
+                                href: `/payments/payment/${payment.id}`,
+                                rel: "confirm",
+                                method: "PUT",
+                            },
+                            {
+                                href: `/payments/payment/${payment.id}`,
+                                rel: "cancel",
+                                method: "DELETE",
+                            },
+                        ];
+                        res.location(`/payments/payment/${response.payment.id}`);
                         res.status(201).json(response);
                     })
                     .catch(error => {
-                        console.log(`Error while persisting in the database: ${error}`);
+                        console.log(`Error while creating payment: ${error}`);
                         res.status(500).send(error);
                     });
             })
@@ -52,7 +67,7 @@ export default app => {
         const id = req.params.id;
         const payment = {
             id,
-            status: 'CONFIRMED',
+            status: PaymentTypes.CONFIRMED,
         };
 
         new PaymentDAO(ConnectionFactory.createConnection())
@@ -68,7 +83,7 @@ export default app => {
         const id = req.params.id;
         const payment = {
             id,
-            status: 'CANCELED',
+            status: PaymentTypes.CANCELED,
         };
 
         new PaymentDAO(ConnectionFactory.createConnection())
@@ -82,9 +97,9 @@ export default app => {
 };
 
 function validatePayment(req) {
-    req.assert("payment_method", "Payment method is mandatory.").notEmpty();
-    req.assert("value", "Value is mandatory and has to be decimal.").notEmpty().isFloat();
-    req.assert("currency", "Currency has to have 3 digits").notEmpty().len(3, 3);
+    req.assert("payment.payment_method", "Payment method is mandatory.").notEmpty();
+    req.assert("payment.value", "Value is mandatory and has to be decimal.").notEmpty().isFloat();
+    req.assert("payment.currency", "Currency has to have 3 digits").notEmpty().len(3, 3);
     return req.getValidationResult()
         .then(errors => {
             return errors.isEmpty() ? Promise.resolve() : Promise.reject(errors.array());

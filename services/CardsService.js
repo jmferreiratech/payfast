@@ -3,7 +3,9 @@ import restify from 'restify-clients';
 class CardsService {
 
     constructor() {
-        this._client = restify.createJsonClient();
+        this._client = restify.createJsonClient({
+            url:'http://localhost:3001',
+        });
     }
 
     authorize(card) {
