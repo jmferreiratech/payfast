@@ -30,6 +30,22 @@ export default app => {
                 res.status(400).send(errors);
             });
     });
+
+    app.route("/payments/payment/:id").put((req, res) => {
+        const id = req.params.id;
+        const payment = {
+            id,
+            status: 'CONFIRMED',
+        };
+
+        new PaymentDAO(ConnectionFactory.createConnection())
+            .update(payment)
+            .then(() => res.status(200).send(payment))
+            .catch(error => {
+                console.log(`Error while persisting in the database: ${error}`);
+                res.status(500).send(error);
+            });
+    });
 };
 
 function validatePayment(req) {

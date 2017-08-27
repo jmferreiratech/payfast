@@ -18,6 +18,21 @@ export class PaymentDAO {
         });
     }
 
+    update(payment) {
+        return new Promise((resolve, reject) => {
+            this._connection.query(
+                `UPDATE ${dbName} SET status = ? WHERE id = ?`,
+                [payment.status, payment.id],
+                (exception, result) => {
+                    if (exception) {
+                        reject(exception);
+                    } else {
+                        resolve(result);
+                    }
+                });
+        });
+    }
+
     list() {
         return new Promise((resolve, reject) => {
             this._connection.query(`SELECT * FROM ${dbName}`, (exception, result) => {
