@@ -16,9 +16,26 @@ export default app => {
                     .save(payment)
                     .then(result => {
                         console.log('Payment created: ' + result);
-                        res.location(`/payments/payment/${result.insertId}`);
                         payment.id = result.insertId;
-                        res.status(201).json(payment);
+                        res.location(`/payments/payment/${payment.id}`);
+
+                        const response = {
+                            payment,
+                            links: [
+                                {
+                                    href: `/payments/payment/${payment.id}`,
+                                    rel: "confirm",
+                                    method: "PUT",
+                                },
+                                {
+                                    href: `/payments/payment/${payment.id}`,
+                                    rel: "cancel",
+                                    method: "DELETE",
+                                },
+                            ],
+                        };
+
+                        res.status(201).json(response);
                     })
                     .catch(error => {
                         console.log(`Error while persisting in the database: ${error}`);
