@@ -46,6 +46,22 @@ export default app => {
                 res.status(500).send(error);
             });
     });
+
+    app.route("/payments/payment/:id").delete((req, res) => {
+        const id = req.params.id;
+        const payment = {
+            id,
+            status: 'CANCELED',
+        };
+
+        new PaymentDAO(ConnectionFactory.createConnection())
+            .update(payment)
+            .then(() => res.status(203).send(payment))
+            .catch(error => {
+                console.log(`Error while persisting in the database: ${error}`);
+                res.status(500).send(error);
+            });
+    });
 };
 
 function validatePayment(req) {
