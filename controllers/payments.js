@@ -9,7 +9,12 @@ const PaymentTypes = {
 };
 
 export default app => {
-    app.route("/payments").get((req, res) => res.send('ok'));
+    app.route("/payments").get((req, res) => {
+        new PaymentDAO(ConnectionFactory.createConnection())
+            .list()
+            .then(result => res.send(result))
+            .catch(error => res.status(500).send(error));
+    });
 
     app.route("/payments/payment").post((req, res) => {
         validatePayment(req)
@@ -61,6 +66,14 @@ export default app => {
                 console.log("Validation errors found");
                 res.status(400).send(errors);
             });
+    });
+
+    app.route("/payments/payment/:id").get((req, res) => {
+        const {id} = req.params;
+        new PaymentDAO(ConnectionFactory.createConnection())
+            .findById(id)
+            .then(result => res.send(result))
+            .catch(error => res.status(500).send(error));
     });
 
     app.route("/payments/payment/:id").put((req, res) => {
