@@ -7,53 +7,45 @@ export class PaymentDAO {
     }
 
     save(payment) {
-        return new Promise((resolve, reject) => {
-            this._connection.query(`INSERT INTO ${dbName} SET ?`, payment, (exception, result) => {
-                if (exception) {
-                    reject(exception);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        return doQuery(
+            this._connection,
+            `INSERT INTO ${dbName} SET ?`,
+            payment
+        );
     }
 
     update(payment) {
-        return new Promise((resolve, reject) => {
-            this._connection.query(
-                `UPDATE ${dbName} SET status = ? WHERE id = ?`,
-                [payment.status, payment.id],
-                (exception, result) => {
-                    if (exception) {
-                        reject(exception);
-                    } else {
-                        resolve(result);
-                    }
-                });
-        });
+        return doQuery(
+            this._connection,
+            `UPDATE ${dbName} SET status = ? WHERE id = ?`,
+            [payment.status, payment.id]
+        );
     }
 
     list() {
-        return new Promise((resolve, reject) => {
-            this._connection.query(`SELECT * FROM ${dbName}`, (exception, result) => {
-                if (exception) {
-                    reject(exception);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        return doQuery(
+            this._connection,
+            `SELECT * FROM ${dbName}`
+        );
     }
 
     findById(id) {
-        return new Promise((resolve, reject) => {
-            this._connection.query(`SELECT * FROM ${dbName} WHERE id = ?`, [id], (exception, result) => {
-                if (exception) {
-                    reject(exception);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        return doQuery(
+            this._connection,
+            `SELECT * FROM ${dbName} WHERE id = ?`,
+            [id]
+        );
     }
+}
+
+function doQuery(connection, query, args) {
+    return new Promise((resolve, reject) => {
+        connection.query(query, args, (exception, result) => {
+            if (exception) {
+                reject(exception);
+            } else {
+                resolve(result);
+            }
+        });
+    });
 }
