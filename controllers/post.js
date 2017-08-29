@@ -1,4 +1,5 @@
 import PostService from "../services/PostService";
+import * as HttpStatus from "http-status-codes";
 
 export default app => {
 
@@ -8,6 +9,6 @@ export default app => {
                 console.log('Delay calculated');
                 res.json(result);
             })
-            .catch(error => res.status(500).send(error));
+            .catch(error => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error));
     });
 };

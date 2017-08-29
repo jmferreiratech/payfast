@@ -1,6 +1,7 @@
 import {PaymentDAO} from "../persistency/PaymentDAO";
 import {ConnectionFactory} from "../persistency/ConnectionFactory";
 import CardsService from "../services/CardsService";
+import * as HttpStatus from "http-status-codes";
 
 const PaymentTypes = {
     CREATED: "CREATED",
@@ -13,7 +14,7 @@ export default app => {
         new PaymentDAO(ConnectionFactory.createConnection())
             .list()
             .then(result => res.send(result))
-            .catch(error => res.status(500).send(error));
+            .catch(error => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error));
     });
 
     app.route("/payments/payment").post((req, res) => {
@@ -55,16 +56,16 @@ export default app => {
                             },
                         ];
                         res.location(`/payments/payment/${response.payment.id}`);
-                        res.status(201).json(response);
+                        res.status(HttpStatus.CREATED).json(response);
                     })
                     .catch(error => {
                         console.log(`Error while creating payment: ${error}`);
-                        res.status(500).send(error);
+                        res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
                     });
             })
             .catch(errors => {
                 console.log("Validation errors found");
-                res.status(400).send(errors);
+                res.status(HttpStatus.BAD_REQUEST).send(errors);
             });
     });
 
@@ -73,7 +74,7 @@ export default app => {
         new PaymentDAO(ConnectionFactory.createConnection())
             .findById(id)
             .then(result => res.send(result))
-            .catch(error => res.status(500).send(error));
+            .catch(error => res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error));
     });
 
     app.route("/payments/payment/:id").put((req, res) => {
@@ -85,10 +86,10 @@ export default app => {
 
         new PaymentDAO(ConnectionFactory.createConnection())
             .update(payment)
-            .then(() => res.status(200).send(payment))
+            .then(() => res.send(payment))
             .catch(error => {
                 console.log(`Error while persisting in the database: ${error}`);
-                res.status(500).send(error);
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
             });
     });
 
@@ -101,10 +102,10 @@ export default app => {
 
         new PaymentDAO(ConnectionFactory.createConnection())
             .update(payment)
-            .then(() => res.status(203).send(payment))
+            .then(() => res.status(HttpStatus.NO_CONTENT).send(payment))
             .catch(error => {
                 console.log(`Error while persisting in the database: ${error}`);
-                res.status(500).send(error);
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
             });
     });
 };
