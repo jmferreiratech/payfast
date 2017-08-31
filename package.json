@@ -20,9 +20,11 @@
     "express": "^4.15.4",
     "express-validator": "^3.2.1",
     "http-status-codes": "^1.2.0",
+    "morgan": "^1.8.2",
     "mysql": "^2.14.1",
     "restify-clients": "^1.5.0",
-    "soap": "^0.20.0"
+    "soap": "^0.20.0",
+    "winston": "^2.3.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
